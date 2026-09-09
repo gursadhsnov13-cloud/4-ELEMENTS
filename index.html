@@ -2,107 +2,137 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <title>4 Elements Arena - Karakter Edition</title>
+    <title>4 Elements Arena - Anime Edition</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #030305; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+        body { margin: 0; overflow: hidden; background: #080314; font-family: 'Orbitron', sans-serif; user-select: none; }
+        
         #ui {
             position: absolute; top: 20px; left: 20px; color: #fff;
-            background: rgba(10, 10, 15, 0.85); padding: 15px 20px; border-radius: 8px;
-            border-left: 4px solid #ff4500; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            background: rgba(15, 8, 35, 0.85); padding: 18px 24px; border-radius: 12px;
+            border: 2px solid #ff0055; box-shadow: 0 0 25px rgba(255, 0, 85, 0.5);
+            backdrop-filter: blur(5px);
         }
-        h2 { margin: 0 0 5px 0; font-size: 18px; color: #ff4500; text-transform: uppercase; }
-        p { margin: 3px 0; font-size: 13px; color: #ccc; }
-        .elem-badge { font-weight: bold; padding: 2px 8px; border-radius: 4px; }
+        h2 { margin: 0 0 8px 0; font-size: 20px; color: #ff0055; text-shadow: 0 0 10px #ff0055; text-transform: uppercase; letter-spacing: 2px; }
+        p { margin: 4px 0; font-size: 13px; color: #e2d9f3; }
+        .elem-badge { font-weight: 900; padding: 4px 12px; border-radius: 6px; letter-spacing: 1px; text-shadow: 0 0 8px rgba(0,0,0,0.8); }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
 <div id="ui">
-    <h2>4 Elements Kolizeyi</h2>
-    <p>Aktiv Element: <span id="elem-display" class="elem-badge" style="background:#ff4500; color:#fff;">ALOV</span></p>
-    <p><b>W, A, S, D</b> - Hərəkət</p>
-    <p><b>Sol Klik</b> - Element Hücumu</p>
-    <p><b>1, 2, 3, 4</b> - Element Dəyişdir</p>
+    <h2>✦ ANIME ELEMENTS ARENA ✦</h2>
+    <p>ELEMENT: <span id="elem-display" class="elem-badge" style="background:#ff3366; color:#fff; box-shadow: 0 0 12px #ff3366;">ALOV</span></p>
+    <p><b>WASD</b> - Hərəkət</p>
+    <p><b>Sol Klik</b> - Anime Sehr Hücumu</p>
+    <p><b>1, 2, 3, 4</b> - Element Dəyiş</p>
 </div>
 
 <script>
-    // 1. SƏHNƏ VƏ KAMERA
+    // 1. SƏHNƏ VƏ ANIME STİLİ SƏMA
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x040406);
-    scene.fog = new THREE.FogExp2(0x040406, 0.015);
+    scene.background = new THREE.Color(0x0e0728);
+    scene.fog = new THREE.FogExp2(0x0e0728, 0.012);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
     document.body.appendChild(renderer.domElement);
 
-    // İŞIQLANDIRMA
-    const ambientLight = new THREE.AmbientLight(0x222233, 0.8);
+    // ANIME İŞIQLANMASI (Al-əlvan və Parlaq)
+    const ambientLight = new THREE.AmbientLight(0x7a52cc, 1.2);
     scene.add(ambientLight);
 
-    // 2. DAİRƏVİ ARENA ZƏMİNİ
+    const dirLight = new THREE.DirectionalLight(0xff00aa, 1.5);
+    dirLight.position.set(20, 40, 20);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    // 2. ANIME ARENASI (Dairəvi Sehrli Platforma)
     const arenaRadius = 28;
-    const floorGeo = new THREE.CylinderGeometry(arenaRadius, arenaRadius + 2, 2, 64);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x15151c, roughness: 0.5, metalness: 0.4 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.position.y = -1;
+    const floorGeo = new THREE.CylinderGeometry(arenaRadius, arenaRadius + 1, 1.5, 64);
+    
+    // Toon Material (Anime Kölgələnməsi)
+    const toonMat = new THREE.MeshToonMaterial({ color: 0x1f1147 });
+    const floor = new THREE.Mesh(floorGeo, toonMat);
+    floor.position.y = -0.75;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // SÜTUNLAR
-    const pillarCount = 10;
-    const ringColors = [0xff4500, 0x1e90ff, 0x2ecc71, 0x00ced1];
+    // Parlaq Sehr Həlqəsi (Arena Kənarı)
+    const ringGeo = new THREE.RingGeometry(arenaRadius - 0.5, arenaRadius, 64);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff0055, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.02;
+    scene.add(ring);
+
+    // Anime Sütunları və Kristallar
+    const pillarCount = 8;
+    const elemColors = [0xff3366, 0x00d2ff, 0x00ff88, 0xffcc00];
     for (let i = 0; i < pillarCount; i++) {
         const angle = (i / pillarCount) * Math.PI * 2;
-        const x = Math.cos(angle) * (arenaRadius - 2);
-        const z = Math.sin(angle) * (arenaRadius - 2);
+        const x = Math.cos(angle) * (arenaRadius - 3);
+        const z = Math.sin(angle) * (arenaRadius - 3);
 
-        const pillarGeo = new THREE.CylinderGeometry(1, 1.3, 10, 16);
-        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x22222a });
+        const pillarGeo = new THREE.CylinderGeometry(0.8, 1.2, 8, 8);
+        const pillarMat = new THREE.MeshToonMaterial({ color: 0x2d1863 });
         const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-        pillar.position.set(x, 5, z);
-        pillar.castShadow = true;
+        pillar.position.set(x, 4, z);
         scene.add(pillar);
 
-        const pLight = new THREE.PointLight(ringColors[i % 4], 1.2, 12);
-        pLight.position.set(x, 10, z);
+        // Sütunların Başındakı Parlaq Anime Kristalı
+        const crysGeo = new THREE.OctahedronGeometry(1.2);
+        const crysMat = new THREE.MeshBasicMaterial({ color: elemColors[i % 4], wireframe: true });
+        const crys = new THREE.Mesh(crysGeo, crysMat);
+        crys.position.set(x, 9, z);
+        scene.add(crys);
+
+        const pLight = new THREE.PointLight(elemColors[i % 4], 2, 15);
+        pLight.position.set(x, 9, z);
         scene.add(pLight);
     }
 
-    // 3. 3D KARAKTER (DÖYÜŞÇÜ MODELİ)
+    // 3. ANIME KARAKTERİ (Aura + Toon Model)
     const characterGroup = new THREE.Group();
 
-    // Gövdə
-    const bodyGeo = new THREE.CylinderGeometry(0.4, 0.2, 1.8, 16);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff4500, roughness: 0.3, metalness: 0.7 });
+    // Body (Toon Material)
+    const bodyGeo = new THREE.ConeGeometry(0.7, 2, 8);
+    const bodyMat = new THREE.MeshToonMaterial({ color: 0xff3366 });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 0.9;
-    body.castShadow = true;
+    body.position.y = 1;
     characterGroup.add(body);
 
-    // Baş/Kask
-    const headGeo = new THREE.SphereGeometry(0.35, 16, 16);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9 });
+    // Anime Saçı / Kaskı
+    const headGeo = new THREE.DodecahedronGeometry(0.5);
+    const headMat = new THREE.MeshToonMaterial({ color: 0xffffff });
     const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 2.0;
+    head.position.y = 2.1;
     characterGroup.add(head);
 
-    // Karakter Aurası (Parlaq İşıq)
-    const charLight = new THREE.PointLight(0xff4500, 2, 10);
+    // Karakter Anime Aurası (Glow Effect)
+    const auraGeo = new THREE.SphereGeometry(1.4, 16, 16);
+    const auraMat = new THREE.MeshBasicMaterial({ color: 0xff3366, wireframe: true, transparent: true, opacity: 0.35 });
+    const aura = new THREE.Mesh(auraGeo, auraMat);
+    aura.position.y = 1.2;
+    characterGroup.add(aura);
+
+    const charLight = new THREE.PointLight(0xff3366, 3, 12);
     charLight.position.y = 1.5;
     characterGroup.add(charLight);
 
     scene.add(characterGroup);
 
-    // 4. ELEMENT PARAMETRLƏRİ
+    // 4. ELEMENTLƏR (ANIME RƏNGLƏRİ İLƏ)
     const elements = {
-        1: { name: 'ALOV', color: 0xff4500, speed: 0.22, spellColor: 0xff3300 },
-        2: { name: 'SU', color: 0x1e90ff, speed: 0.18, spellColor: 0x00ffff },
-        3: { name: 'TORPAQ', color: 0x2ecc71, speed: 0.14, spellColor: 0x8b5a2b },
-        4: { name: 'HAVA', color: 0x00ced1, speed: 0.28, spellColor: 0xffffff }
+        1: { name: 'ALOV', color: 0xff3366, speed: 0.25, spellColor: 0xff0055 },
+        2: { name: 'SU', color: 0x00d2ff, speed: 0.20, spellColor: 0x00ffff },
+        3: { name: 'TORPAQ', color: 0x00ff88, speed: 0.16, spellColor: 0x00ffaa },
+        4: { name: 'HAVA', color: 0xffcc00, speed: 0.32, spellColor: 0xffffff }
     };
     let currentElem = elements[1];
 
@@ -110,14 +140,17 @@
         if(!elements[num]) return;
         currentElem = elements[num];
         bodyMat.color.setHex(currentElem.color);
+        auraMat.color.setHex(currentElem.color);
         charLight.color.setHex(currentElem.color);
+        ringMat.color.setHex(currentElem.color);
         
         const badge = document.getElementById('elem-display');
         badge.innerText = currentElem.name;
         badge.style.background = '#' + currentElem.color.toString(16);
+        badge.style.boxShadow = '0 0 15px #' + currentElem.color.toString(16);
     }
 
-    // 5. İDARƏETMƏ VƏ HƏRƏKƏT
+    // 5. İDARƏETMƏ & ANIME SEHR ATƏŞİ
     const keys = {};
     window.addEventListener('keydown', e => {
         keys[e.key.toLowerCase()] = true;
@@ -125,54 +158,64 @@
     });
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    // HÜCUM / SEHR SİSTEMİ
     const spells = [];
     window.addEventListener('click', () => {
-        const spellGeo = new THREE.SphereGeometry(0.35, 16, 16);
-        const spellMat = new THREE.MeshBasicMaterial({ color: currentElem.spellColor });
-        const spell = new THREE.Mesh(spellGeo, spellMat);
+        // Anime Sehr Kürəsi (Parlaq və halqalı)
+        const spellGroup = new THREE.Group();
         
-        spell.position.copy(characterGroup.position);
-        spell.position.y = 1.2;
+        const coreGeo = new THREE.SphereGeometry(0.4, 16, 16);
+        const coreMat = new THREE.MeshBasicMaterial({ color: currentElem.spellColor });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        spellGroup.add(core);
 
-        // Hücum istiqaməti
+        const ringG = new THREE.TorusGeometry(0.7, 0.05, 8, 16);
+        const ringM = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const spellRing = new THREE.Mesh(ringG, ringM);
+        spellGroup.add(spellRing);
+
+        spellGroup.position.copy(characterGroup.position);
+        spellGroup.position.y = 1.2;
+
         const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(characterGroup.quaternion);
-        spell.userData = { dir: dir };
+        spellGroup.userData = { dir: dir };
 
-        scene.add(spell);
-        spells.push(spell);
+        scene.add(spellGroup);
+        spells.push(spellGroup);
     });
 
-    // ANİMASİYA DÖVRƏSİ
+    // ANİMASİYA
     function animate() {
         requestAnimationFrame(animate);
 
+        // Aura Dövriyyəsi (Anime Effekti)
+        aura.rotation.y += 0.03;
+        aura.rotation.z += 0.02;
+
         // Karakter Hərəkəti
         const speed = currentElem.speed;
-        let moved = false;
+        if (keys['w']) { characterGroup.position.z -= speed; characterGroup.rotation.y = Math.PI; }
+        if (keys['s']) { characterGroup.position.z += speed; characterGroup.rotation.y = 0; }
+        if (keys['a']) { characterGroup.position.x -= speed; characterGroup.rotation.y = -Math.PI / 2; }
+        if (keys['d']) { characterGroup.position.x += speed; characterGroup.rotation.y = Math.PI / 2; }
 
-        if (keys['w']) { characterGroup.position.z -= speed; characterGroup.rotation.y = Math.PI; moved = true; }
-        if (keys['s']) { characterGroup.position.z += speed; characterGroup.rotation.y = 0; moved = true; }
-        if (keys['a']) { characterGroup.position.x -= speed; characterGroup.rotation.y = -Math.PI / 2; moved = true; }
-        if (keys['d']) { characterGroup.position.x += speed; characterGroup.rotation.y = Math.PI / 2; moved = true; }
-
-        // Arena Kənarlarından Çıxmamaq Şərti
+        // Sərhəd
         const dist = Math.sqrt(characterGroup.position.x**2 + characterGroup.position.z**2);
         if (dist > arenaRadius - 2) {
             characterGroup.position.x *= (arenaRadius - 2) / dist;
             characterGroup.position.z *= (arenaRadius - 2) / dist;
         }
 
-        // Kameranın Karakteri İzləməsi
+        // Kamera
         camera.position.x = characterGroup.position.x;
-        camera.position.z = characterGroup.position.z + 14;
-        camera.position.y = characterGroup.position.y + 10;
+        camera.position.z = characterGroup.position.z + 15;
+        camera.position.y = characterGroup.position.y + 11;
         camera.lookAt(characterGroup.position.x, characterGroup.position.y + 1, characterGroup.position.z);
 
-        // Sehrlərin (Mərmilərin) Hərəkəti
+        // Sehr Mərmiləri
         for (let i = spells.length - 1; i >= 0; i--) {
             const s = spells[i];
-            s.position.addScaledVector(s.userData.dir, 0.5);
+            s.position.addScaledVector(s.userData.dir, 0.6);
+            s.rotation.z += 0.1;
 
             if (s.position.distanceTo(characterGroup.position) > 40) {
                 scene.remove(s);
