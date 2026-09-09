@@ -2,227 +2,153 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <title>4 Elements Arena - Anime Edition</title>
+    <title>Cyber-Anime Cyber Arena</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
-        body { margin: 0; overflow: hidden; background: #080314; font-family: 'Orbitron', sans-serif; user-select: none; }
-        
-        #ui {
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap');
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Rajdhani', sans-serif; }
+        #overlay {
             position: absolute; top: 20px; left: 20px; color: #fff;
-            background: rgba(15, 8, 35, 0.85); padding: 18px 24px; border-radius: 12px;
-            border: 2px solid #ff0055; box-shadow: 0 0 25px rgba(255, 0, 85, 0.5);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.7); padding: 15px 25px;
+            border: 1px solid rgba(0, 255, 204, 0.3); border-left: 4px solid #00ffcc;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2); backdrop-filter: blur(10px);
         }
-        h2 { margin: 0 0 8px 0; font-size: 20px; color: #ff0055; text-shadow: 0 0 10px #ff0055; text-transform: uppercase; letter-spacing: 2px; }
-        p { margin: 4px 0; font-size: 13px; color: #e2d9f3; }
-        .elem-badge { font-weight: 900; padding: 4px 12px; border-radius: 6px; letter-spacing: 1px; text-shadow: 0 0 8px rgba(0,0,0,0.8); }
+        h1 { margin: 0; font-size: 22px; color: #00ffcc; letter-spacing: 2px; text-transform: uppercase; }
+        p { margin: 5px 0 0; font-size: 14px; color: #aaa; }
     </style>
+    <!-- Three.js + PostProcessing (Parıltı Effekti Üçün) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
-<div id="ui">
-    <h2>✦ ANIME ELEMENTS ARENA ✦</h2>
-    <p>ELEMENT: <span id="elem-display" class="elem-badge" style="background:#ff3366; color:#fff; box-shadow: 0 0 12px #ff3366;">ALOV</span></p>
-    <p><b>WASD</b> - Hərəkət</p>
-    <p><b>Sol Klik</b> - Anime Sehr Hücumu</p>
-    <p><b>1, 2, 3, 4</b> - Element Dəyiş</p>
+<div id="overlay">
+    <h1>Cyber Temple Arena</h1>
+    <p>Mausun sol düyməsi ilə fırladın • Sağ düymə ilə sürüşdürün • Yaxınlaşdırın</p>
 </div>
 
 <script>
-    // 1. SƏHNƏ VƏ ANIME STİLİ SƏMA
+    // 1. SCENE SETUP
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0e0728);
-    scene.fog = new THREE.FogExp2(0x0e0728, 0.012);
+    scene.background = new THREE.Color(0x020208);
+    scene.fog = new THREE.FogExp2(0x020208, 0.015);
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 25, 45);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
     document.body.appendChild(renderer.domElement);
 
-    // ANIME İŞIQLANMASI (Al-əlvan və Parlaq)
-    const ambientLight = new THREE.AmbientLight(0x7a52cc, 1.2);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05; // Yerin altına keçməsin
+
+    // 2. LIGHTING (Müasir İşıqlandırma)
+    const ambientLight = new THREE.AmbientLight(0x0a0a16, 1.5);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xff00aa, 1.5);
-    dirLight.position.set(20, 40, 20);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2);
+    mainLight.position.set(20, 40, 20);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
+    scene.add(mainLight);
 
-    // 2. ANIME ARENASI (Dairəvi Sehrli Platforma)
-    const arenaRadius = 28;
-    const floorGeo = new THREE.CylinderGeometry(arenaRadius, arenaRadius + 1, 1.5, 64);
-    
-    // Toon Material (Anime Kölgələnməsi)
-    const toonMat = new THREE.MeshToonMaterial({ color: 0x1f1147 });
-    const floor = new THREE.Mesh(floorGeo, toonMat);
-    floor.position.y = -0.75;
+    // Mərkəzi Parlaq Məbəd İşığı
+    const centerLight = new THREE.PointLight(0x00ffcc, 5, 30);
+    centerLight.position.set(0, 2, 0);
+    scene.add(centerLight);
+
+    // 3. HIGH-QUALITY ARENA STRUCTURE
+    const arenaGroup = new THREE.Group();
+
+    // Əsas Zəmin (PBR Metalik material)
+    const floorGeo = new THREE.CylinderGeometry(25, 26, 2, 64);
+    const floorMat = new THREE.MeshStandardMaterial({
+        color: 0x0a0c14,
+        roughness: 0.2,
+        metalness: 0.8
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.position.y = -1;
     floor.receiveShadow = true;
-    scene.add(floor);
+    arenaGroup.add(floor);
 
-    // Parlaq Sehr Həlqəsi (Arena Kənarı)
-    const ringGeo = new THREE.RingGeometry(arenaRadius - 0.5, arenaRadius, 64);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff0055, side: THREE.DoubleSide });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.02;
-    scene.add(ring);
+    // Dairəvi Parlaq Neon Şəbəkələr
+    const ringGeom = new THREE.RingGeometry(24.5, 25, 64);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, side: THREE.DoubleSide });
+    const outerRing = new THREE.Mesh(ringGeom, ringMat);
+    outerRing.rotation.x = Math.PI / 2;
+    outerRing.position.y = 0.01;
+    arenaGroup.add(outerRing);
 
-    // Anime Sütunları və Kristallar
-    const pillarCount = 8;
-    const elemColors = [0xff3366, 0x00d2ff, 0x00ff88, 0xffcc00];
+    const innerRingGeom = new THREE.RingGeometry(8, 8.3, 64);
+    const innerRingMat = new THREE.MeshBasicMaterial({ color: 0xff0055, side: THREE.DoubleSide });
+    const innerRing = new THREE.Mesh(innerRingGeom, innerRingMat);
+    innerRing.rotation.x = Math.PI / 2;
+    innerRing.position.y = 0.01;
+    arenaGroup.add(innerRing);
+
+    // Mərkəzdəki Enerji Kristalı
+    const crystalGeo = new THREE.OctahedronGeometry(2, 0);
+    const crystalMat = new THREE.MeshStandardMaterial({
+        color: 0x00ffcc,
+        emissive: 0x00ffcc,
+        emissiveIntensity: 0.8,
+        roughness: 0.1,
+        metalness: 0.9,
+        wireframe: true
+    });
+    const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+    crystal.position.y = 4;
+    arenaGroup.add(crystal);
+
+    // Sütunlar və Neon Həlqələr
+    const pillarCount = 6;
     for (let i = 0; i < pillarCount; i++) {
         const angle = (i / pillarCount) * Math.PI * 2;
-        const x = Math.cos(angle) * (arenaRadius - 3);
-        const z = Math.sin(angle) * (arenaRadius - 3);
+        const radius = 20;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
 
-        const pillarGeo = new THREE.CylinderGeometry(0.8, 1.2, 8, 8);
-        const pillarMat = new THREE.MeshToonMaterial({ color: 0x2d1863 });
-        const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-        pillar.position.set(x, 4, z);
-        scene.add(pillar);
+        // Sütun Gövdəsi
+        const pGeo = new THREE.BoxGeometry(1.5, 12, 1.5);
+        const pMat = new THREE.MeshStandardMaterial({ color: 0x121520, roughness: 0.3, metalness: 0.7 });
+        const pillar = new THREE.Mesh(pGeo, pMat);
+        pillar.position.set(x, 6, z);
+        pillar.castShadow = true;
+        pillar.receiveShadow = true;
+        arenaGroup.add(pillar);
 
-        // Sütunların Başındakı Parlaq Anime Kristalı
-        const crysGeo = new THREE.OctahedronGeometry(1.2);
-        const crysMat = new THREE.MeshBasicMaterial({ color: elemColors[i % 4], wireframe: true });
-        const crys = new THREE.Mesh(crysGeo, crysMat);
-        crys.position.set(x, 9, z);
-        scene.add(crys);
-
-        const pLight = new THREE.PointLight(elemColors[i % 4], 2, 15);
-        pLight.position.set(x, 9, z);
-        scene.add(pLight);
+        // Sütun Üzərində Neon İşıq xətti
+        const pLight = new THREE.PointLight(i % 2 === 0 ? 0x00ffcc : 0xff0055, 2, 15);
+        pLight.position.set(x, 10, z);
+        arenaGroup.add(pLight);
     }
 
-    // 3. ANIME KARAKTERİ (Aura + Toon Model)
-    const characterGroup = new THREE.Group();
+    // Grid (Zəmin Şəbəkəsi)
+    const grid = new THREE.GridHelper(60, 40, 0x00ffcc, 0x151d2a);
+    grid.position.y = -2;
+    scene.add(grid);
 
-    // Body (Toon Material)
-    const bodyGeo = new THREE.ConeGeometry(0.7, 2, 8);
-    const bodyMat = new THREE.MeshToonMaterial({ color: 0xff3366 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 1;
-    characterGroup.add(body);
+    scene.add(arenaGroup);
 
-    // Anime Saçı / Kaskı
-    const headGeo = new THREE.DodecahedronGeometry(0.5);
-    const headMat = new THREE.MeshToonMaterial({ color: 0xffffff });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 2.1;
-    characterGroup.add(head);
-
-    // Karakter Anime Aurası (Glow Effect)
-    const auraGeo = new THREE.SphereGeometry(1.4, 16, 16);
-    const auraMat = new THREE.MeshBasicMaterial({ color: 0xff3366, wireframe: true, transparent: true, opacity: 0.35 });
-    const aura = new THREE.Mesh(auraGeo, auraMat);
-    aura.position.y = 1.2;
-    characterGroup.add(aura);
-
-    const charLight = new THREE.PointLight(0xff3366, 3, 12);
-    charLight.position.y = 1.5;
-    characterGroup.add(charLight);
-
-    scene.add(characterGroup);
-
-    // 4. ELEMENTLƏR (ANIME RƏNGLƏRİ İLƏ)
-    const elements = {
-        1: { name: 'ALOV', color: 0xff3366, speed: 0.25, spellColor: 0xff0055 },
-        2: { name: 'SU', color: 0x00d2ff, speed: 0.20, spellColor: 0x00ffff },
-        3: { name: 'TORPAQ', color: 0x00ff88, speed: 0.16, spellColor: 0x00ffaa },
-        4: { name: 'HAVA', color: 0xffcc00, speed: 0.32, spellColor: 0xffffff }
-    };
-    let currentElem = elements[1];
-
-    function setElement(num) {
-        if(!elements[num]) return;
-        currentElem = elements[num];
-        bodyMat.color.setHex(currentElem.color);
-        auraMat.color.setHex(currentElem.color);
-        charLight.color.setHex(currentElem.color);
-        ringMat.color.setHex(currentElem.color);
-        
-        const badge = document.getElementById('elem-display');
-        badge.innerText = currentElem.name;
-        badge.style.background = '#' + currentElem.color.toString(16);
-        badge.style.boxShadow = '0 0 15px #' + currentElem.color.toString(16);
-    }
-
-    // 5. İDARƏETMƏ & ANIME SEHR ATƏŞİ
-    const keys = {};
-    window.addEventListener('keydown', e => {
-        keys[e.key.toLowerCase()] = true;
-        if(['1','2','3','4'].includes(e.key)) setElement(e.key);
-    });
-    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-    const spells = [];
-    window.addEventListener('click', () => {
-        // Anime Sehr Kürəsi (Parlaq və halqalı)
-        const spellGroup = new THREE.Group();
-        
-        const coreGeo = new THREE.SphereGeometry(0.4, 16, 16);
-        const coreMat = new THREE.MeshBasicMaterial({ color: currentElem.spellColor });
-        const core = new THREE.Mesh(coreGeo, coreMat);
-        spellGroup.add(core);
-
-        const ringG = new THREE.TorusGeometry(0.7, 0.05, 8, 16);
-        const ringM = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const spellRing = new THREE.Mesh(ringG, ringM);
-        spellGroup.add(spellRing);
-
-        spellGroup.position.copy(characterGroup.position);
-        spellGroup.position.y = 1.2;
-
-        const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(characterGroup.quaternion);
-        spellGroup.userData = { dir: dir };
-
-        scene.add(spellGroup);
-        spells.push(spellGroup);
-    });
-
-    // ANİMASİYA
+    // 4. ANİMASİYA VƏ RENDER
     function animate() {
         requestAnimationFrame(animate);
 
-        // Aura Dövriyyəsi (Anime Effekti)
-        aura.rotation.y += 0.03;
-        aura.rotation.z += 0.02;
+        // Kristalın Yavaşca Fırlanması və Hərəkəti
+        crystal.rotation.y += 0.01;
+        crystal.rotation.x += 0.005;
+        crystal.position.y = 4 + Math.sin(Date.now() * 0.002) * 0.5;
 
-        // Karakter Hərəkəti
-        const speed = currentElem.speed;
-        if (keys['w']) { characterGroup.position.z -= speed; characterGroup.rotation.y = Math.PI; }
-        if (keys['s']) { characterGroup.position.z += speed; characterGroup.rotation.y = 0; }
-        if (keys['a']) { characterGroup.position.x -= speed; characterGroup.rotation.y = -Math.PI / 2; }
-        if (keys['d']) { characterGroup.position.x += speed; characterGroup.rotation.y = Math.PI / 2; }
-
-        // Sərhəd
-        const dist = Math.sqrt(characterGroup.position.x**2 + characterGroup.position.z**2);
-        if (dist > arenaRadius - 2) {
-            characterGroup.position.x *= (arenaRadius - 2) / dist;
-            characterGroup.position.z *= (arenaRadius - 2) / dist;
-        }
-
-        // Kamera
-        camera.position.x = characterGroup.position.x;
-        camera.position.z = characterGroup.position.z + 15;
-        camera.position.y = characterGroup.position.y + 11;
-        camera.lookAt(characterGroup.position.x, characterGroup.position.y + 1, characterGroup.position.z);
-
-        // Sehr Mərmiləri
-        for (let i = spells.length - 1; i >= 0; i--) {
-            const s = spells[i];
-            s.position.addScaledVector(s.userData.dir, 0.6);
-            s.rotation.z += 0.1;
-
-            if (s.position.distanceTo(characterGroup.position) > 40) {
-                scene.remove(s);
-                spells.splice(i, 1);
-            }
-        }
-
+        controls.update();
         renderer.render(scene, camera);
     }
 
