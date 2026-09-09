@@ -162,3 +162,218 @@
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <title>Avatar: Waterbender Arena</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
+        body { margin: 0; overflow: hidden; background: #010814; font-family: 'Cinzel', serif; user-select: none; }
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: #fff;
+            background: rgba(2, 18, 38, 0.85); padding: 18px 25px; border-radius: 10px;
+            border: 2px solid #00d2ff; box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+            backdrop-filter: blur(8px);
+        }
+        h2 { margin: 0 0 5px 0; font-size: 20px; color: #00ffff; text-shadow: 0 0 10px #00ffff; letter-spacing: 2px; }
+        p { margin: 4px 0; font-size: 13px; color: #a5e5ff; }
+        .water-badge { background: #0088ff; color: #fff; padding: 3px 10px; border-radius: 4px; font-weight: bold; box-shadow: 0 0 10px #0088ff; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<div id="ui">
+    <h2>✦ AVATAR: METKAYINA ✦</h2>
+    <p>ELEMENT: <span class="water-badge">SU BÜKÜCÜ (WATERBENDER)</span></p>
+    <p><b>WASD</b> - Hərəkət Et</p>
+    <p><b>Sol Klik (və ya basıb saxla)</b> - Su Şırnağı / Hücum</p>
+</div>
+
+<script>
+    // 1. SCENE & WATER ATMOSPHERE
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x010c1e);
+    scene.fog = new THREE.FogExp2(0x010c1e, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    document.body.appendChild(renderer.domElement);
+
+    // İŞIQLANMA (Okean Maviliyi)
+    const ambientLight = new THREE.AmbientLight(0x0044aa, 1.5);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0x00ffff, 2);
+    sunLight.position.set(15, 30, 15);
+    sunLight.castShadow = true;
+    scene.add(sunLight);
+
+    // 2. OCEAN ARENA (Məbəd Okean Zəmini)
+    const arenaRadius = 30;
+    const floorGeo = new THREE.CylinderGeometry(arenaRadius, arenaRadius + 1, 1, 64);
+    const floorMat = new THREE.MeshStandardMaterial({
+        color: 0x031833,
+        roughness: 0.1,
+        metalness: 0.9,
+        flatShading: true
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.position.y = -0.5;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Parlaq Su Həlqəsi
+    const ringGeo = new THREE.RingGeometry(arenaRadius - 0.5, arenaRadius, 64);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.02;
+    scene.add(ring);
+
+    // 3. AVATAR SU ADAMI KARAKTERİ (Metkayina)
+    const avatarGroup = new THREE.Group();
+
+    // Dəri Materialı (Avatar Mavisi)
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0x1d72b8, roughness: 0.5 });
+    const armorMat = new THREE.MeshStandardMaterial({ color: 0x0a2d4a, roughness: 0.3, metalness: 0.8 });
+
+    // Gövdə (Body)
+    const torsoGeo = new THREE.CylinderGeometry(0.5, 0.35, 1.8, 12);
+    const torso = new THREE.Mesh(torsoGeo, armorMat);
+    torso.position.y = 1.6;
+    avatarGroup.add(torso);
+
+    // Baş (Head)
+    const headGeo = new THREE.SphereGeometry(0.35, 16, 16);
+    const head = new THREE.Mesh(headGeo, skinMat);
+    head.position.y = 2.7;
+    avatarGroup.add(head);
+
+    // Avatar Qulaqları
+    const earGeo = new THREE.ConeGeometry(0.1, 0.4, 4);
+    const leftEar = new THREE.Mesh(earGeo, skinMat);
+    leftEar.rotation.z = -Math.PI / 3;
+    leftEar.position.set(-0.35, 2.7, 0);
+    avatarGroup.add(leftEar);
+
+    const rightEar = new THREE.Mesh(earGeo, skinMat);
+    rightEar.rotation.z = Math.PI / 3;
+    rightEar.position.set(0.35, 2.7, 0);
+    avatarGroup.add(rightEar);
+
+    // Əllər (Arms)
+    const armGeo = new THREE.CylinderGeometry(0.12, 0.1, 1.2, 8);
+    const leftArm = new THREE.Mesh(armGeo, skinMat);
+    leftArm.position.set(-0.7, 1.8, 0);
+    leftArm.rotation.z = 0.2;
+    avatarGroup.add(leftArm);
+
+    const rightArm = new THREE.Mesh(armGeo, skinMat);
+    rightArm.position.set(0.7, 1.8, 0);
+    rightArm.rotation.z = -0.2;
+    avatarGroup.add(rightArm);
+
+    // Karakter Aurası (Ətrafında Dövran Edən Su Həlqəsi)
+    const waterRingGeo = new THREE.TorusGeometry(1.2, 0.08, 16, 32);
+    const waterRingMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+    const waterRing = new THREE.Mesh(waterRingGeo, waterRingMat);
+    waterRing.rotation.x = Math.PI / 2;
+    waterRing.position.y = 1.2;
+    avatarGroup.add(waterRing);
+
+    scene.add(avatarGroup);
+
+    // 4. WATERBENDING (SU ŞIRNAĞI VƏ PARTİKL SİSTEMİ)
+    const waterParticles = [];
+    let isAttacking = false;
+
+    window.addEventListener('mousedown', () => isAttacking = true);
+    window.addEventListener('mouseup', () => isAttacking = false);
+
+    function createWaterJet() {
+        const pGeo = new THREE.SphereGeometry(0.25 + Math.random() * 0.2, 8, 8);
+        const pMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.8 });
+        const p = new THREE.Mesh(pGeo, pMat);
+
+        p.position.copy(avatarGroup.position);
+        p.position.y = 1.8;
+
+        const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(avatarGroup.quaternion);
+        // Su jetinə biraz dağınıqlıq veririk
+        dir.x += (Math.random() - 0.5) * 0.2;
+        dir.y += (Math.random() - 0.5) * 0.1;
+
+        p.userData = { dir: dir, life: 60 };
+        scene.add(p);
+        waterParticles.push(p);
+    }
+
+    // 5. İDARƏETMƏ VƏ ANİMASİYA
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Su Aurasının Fırlanması
+        waterRing.rotation.z += 0.05;
+        waterRing.position.y = 1.2 + Math.sin(Date.now() * 0.005) * 0.2;
+
+        // Karakter Hərəkəti
+        const speed = 0.2;
+        if (keys['w']) { avatarGroup.position.z -= speed; avatarGroup.rotation.y = Math.PI; }
+        if (keys['s']) { avatarGroup.position.z += speed; avatarGroup.rotation.y = 0; }
+        if (keys['a']) { avatarGroup.position.x -= speed; avatarGroup.rotation.y = -Math.PI / 2; }
+        if (keys['d']) { avatarGroup.position.x += speed; avatarGroup.rotation.y = Math.PI / 2; }
+
+        // Məbəd Kənarı
+        const dist = Math.sqrt(avatarGroup.position.x**2 + avatarGroup.position.z**2);
+        if (dist > arenaRadius - 2) {
+            avatarGroup.position.x *= (arenaRadius - 2) / dist;
+            avatarGroup.position.z *= (arenaRadius - 2) / dist;
+        }
+
+        // Su Atəşi (Sıxıb Saxladıqda)
+        if (isAttacking) {
+            createWaterJet();
+            createWaterJet();
+        }
+
+        // Su Hissəciklərinin Hərəkəti Və Yox Olması
+        for (let i = waterParticles.length - 1; i >= 0; i--) {
+            const p = waterParticles[i];
+            p.position.addScaledVector(p.userData.dir, 0.7);
+            p.userData.life--;
+            p.scale.multiplyScalar(0.97); // Kiçilir
+
+            if (p.userData.life <= 0) {
+                scene.remove(p);
+                waterParticles.splice(i, 1);
+            }
+        }
+
+        // Kamera İzləməsi
+        camera.position.x = avatarGroup.position.x;
+        camera.position.z = avatarGroup.position.z + 14;
+        camera.position.y = avatarGroup.position.y + 10;
+        camera.lookAt(avatarGroup.position.x, avatarGroup.position.y + 1.5, avatarGroup.position.z);
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+</body>
+</html>
