@@ -2,170 +2,6 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <title>Cyber-Anime Cyber Arena</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap');
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Rajdhani', sans-serif; }
-        #overlay {
-            position: absolute; top: 20px; left: 20px; color: #fff;
-            background: rgba(0, 0, 0, 0.7); padding: 15px 25px;
-            border: 1px solid rgba(0, 255, 204, 0.3); border-left: 4px solid #00ffcc;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2); backdrop-filter: blur(10px);
-        }
-        h1 { margin: 0; font-size: 22px; color: #00ffcc; letter-spacing: 2px; text-transform: uppercase; }
-        p { margin: 5px 0 0; font-size: 14px; color: #aaa; }
-    </style>
-    <!-- Three.js + PostProcessing (Parıltı Effekti Üçün) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-</head>
-<body>
-
-<div id="overlay">
-    <h1>Cyber Temple Arena</h1>
-    <p>Mausun sol düyməsi ilə fırladın • Sağ düymə ilə sürüşdürün • Yaxınlaşdırın</p>
-</div>
-
-<script>
-    // 1. SCENE SETUP
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020208);
-    scene.fog = new THREE.FogExp2(0x020208, 0.015);
-
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 25, 45);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    document.body.appendChild(renderer.domElement);
-
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 - 0.05; // Yerin altına keçməsin
-
-    // 2. LIGHTING (Müasir İşıqlandırma)
-    const ambientLight = new THREE.AmbientLight(0x0a0a16, 1.5);
-    scene.add(ambientLight);
-
-    const mainLight = new THREE.DirectionalLight(0xffffff, 2);
-    mainLight.position.set(20, 40, 20);
-    mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 2048;
-    mainLight.shadow.mapSize.height = 2048;
-    scene.add(mainLight);
-
-    // Mərkəzi Parlaq Məbəd İşığı
-    const centerLight = new THREE.PointLight(0x00ffcc, 5, 30);
-    centerLight.position.set(0, 2, 0);
-    scene.add(centerLight);
-
-    // 3. HIGH-QUALITY ARENA STRUCTURE
-    const arenaGroup = new THREE.Group();
-
-    // Əsas Zəmin (PBR Metalik material)
-    const floorGeo = new THREE.CylinderGeometry(25, 26, 2, 64);
-    const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x0a0c14,
-        roughness: 0.2,
-        metalness: 0.8
-    });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.position.y = -1;
-    floor.receiveShadow = true;
-    arenaGroup.add(floor);
-
-    // Dairəvi Parlaq Neon Şəbəkələr
-    const ringGeom = new THREE.RingGeometry(24.5, 25, 64);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, side: THREE.DoubleSide });
-    const outerRing = new THREE.Mesh(ringGeom, ringMat);
-    outerRing.rotation.x = Math.PI / 2;
-    outerRing.position.y = 0.01;
-    arenaGroup.add(outerRing);
-
-    const innerRingGeom = new THREE.RingGeometry(8, 8.3, 64);
-    const innerRingMat = new THREE.MeshBasicMaterial({ color: 0xff0055, side: THREE.DoubleSide });
-    const innerRing = new THREE.Mesh(innerRingGeom, innerRingMat);
-    innerRing.rotation.x = Math.PI / 2;
-    innerRing.position.y = 0.01;
-    arenaGroup.add(innerRing);
-
-    // Mərkəzdəki Enerji Kristalı
-    const crystalGeo = new THREE.OctahedronGeometry(2, 0);
-    const crystalMat = new THREE.MeshStandardMaterial({
-        color: 0x00ffcc,
-        emissive: 0x00ffcc,
-        emissiveIntensity: 0.8,
-        roughness: 0.1,
-        metalness: 0.9,
-        wireframe: true
-    });
-    const crystal = new THREE.Mesh(crystalGeo, crystalMat);
-    crystal.position.y = 4;
-    arenaGroup.add(crystal);
-
-    // Sütunlar və Neon Həlqələr
-    const pillarCount = 6;
-    for (let i = 0; i < pillarCount; i++) {
-        const angle = (i / pillarCount) * Math.PI * 2;
-        const radius = 20;
-        const x = Math.cos(angle) * radius;
-        const z = Math.sin(angle) * radius;
-
-        // Sütun Gövdəsi
-        const pGeo = new THREE.BoxGeometry(1.5, 12, 1.5);
-        const pMat = new THREE.MeshStandardMaterial({ color: 0x121520, roughness: 0.3, metalness: 0.7 });
-        const pillar = new THREE.Mesh(pGeo, pMat);
-        pillar.position.set(x, 6, z);
-        pillar.castShadow = true;
-        pillar.receiveShadow = true;
-        arenaGroup.add(pillar);
-
-        // Sütun Üzərində Neon İşıq xətti
-        const pLight = new THREE.PointLight(i % 2 === 0 ? 0x00ffcc : 0xff0055, 2, 15);
-        pLight.position.set(x, 10, z);
-        arenaGroup.add(pLight);
-    }
-
-    // Grid (Zəmin Şəbəkəsi)
-    const grid = new THREE.GridHelper(60, 40, 0x00ffcc, 0x151d2a);
-    grid.position.y = -2;
-    scene.add(grid);
-
-    scene.add(arenaGroup);
-
-    // 4. ANİMASİYA VƏ RENDER
-    function animate() {
-        requestAnimationFrame(animate);
-
-        // Kristalın Yavaşca Fırlanması və Hərəkəti
-        crystal.rotation.y += 0.01;
-        crystal.rotation.x += 0.005;
-        crystal.position.y = 4 + Math.sin(Date.now() * 0.002) * 0.5;
-
-        controls.update();
-        renderer.render(scene, camera);
-    }
-
-    animate();
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-</script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="az">
-<head>
-    <meta charset="UTF-8">
     <title>Avatar: Waterbender Arena</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
@@ -188,39 +24,42 @@
     <h2>✦ AVATAR: METKAYINA ✦</h2>
     <p>ELEMENT: <span class="water-badge">SU BÜKÜCÜ (WATERBENDER)</span></p>
     <p><b>WASD</b> - Hərəkət Et</p>
-    <p><b>Sol Klik (və ya basıb saxla)</b> - Su Şırnağı / Hücum</p>
+    <p><b>Sol Klik</b> - Su Şırnağı Hücumu</p>
 </div>
 
 <script>
-    // 1. SCENE & WATER ATMOSPHERE
+    // 1. SCENE & CAMERA SETUP
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x010c1e);
     scene.fog = new THREE.FogExp2(0x010c1e, 0.012);
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     document.body.appendChild(renderer.domElement);
 
-    // İŞIQLANMA (Okean Maviliyi)
-    const ambientLight = new THREE.AmbientLight(0x0044aa, 1.5);
+    // İŞIQLANMA DÜZƏLİŞİ (Karakterin görünməsi üçün ön işıq əlavə edildi)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0x00ffff, 2);
-    sunLight.position.set(15, 30, 15);
+    const sunLight = new THREE.DirectionalLight(0x00ffff, 1.5);
+    sunLight.position.set(10, 20, 10);
     sunLight.castShadow = true;
     scene.add(sunLight);
 
-    // 2. OCEAN ARENA (Məbəd Okean Zəmini)
+    const frontLight = new THREE.DirectionalLight(0x0088ff, 1);
+    frontLight.position.set(0, 10, -10);
+    scene.add(frontLight);
+
+    // 2. OCEAN ARENA
     const arenaRadius = 30;
     const floorGeo = new THREE.CylinderGeometry(arenaRadius, arenaRadius + 1, 1, 64);
     const floorMat = new THREE.MeshStandardMaterial({
         color: 0x031833,
-        roughness: 0.1,
-        metalness: 0.9,
-        flatShading: true
+        roughness: 0.2,
+        metalness: 0.8
     });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.position.y = -0.5;
@@ -235,60 +74,69 @@
     ring.position.y = 0.02;
     scene.add(ring);
 
-    // 3. AVATAR SU ADAMI KARAKTERİ (Metkayina)
+    // 3. AVATAR KARAKTERİ
     const avatarGroup = new THREE.Group();
 
-    // Dəri Materialı (Avatar Mavisi)
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0x1d72b8, roughness: 0.5 });
-    const armorMat = new THREE.MeshStandardMaterial({ color: 0x0a2d4a, roughness: 0.3, metalness: 0.8 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0x1d72b8, roughness: 0.4 });
+    const armorMat = new THREE.MeshStandardMaterial({ color: 0x0a2d4a, roughness: 0.3, metalness: 0.6 });
 
-    // Gövdə (Body)
+    // Gövdə
     const torsoGeo = new THREE.CylinderGeometry(0.5, 0.35, 1.8, 12);
     const torso = new THREE.Mesh(torsoGeo, armorMat);
-    torso.position.y = 1.6;
+    torso.position.y = 1.8;
     avatarGroup.add(torso);
 
-    // Baş (Head)
-    const headGeo = new THREE.SphereGeometry(0.35, 16, 16);
+    // Baş
+    const headGeo = new THREE.SphereGeometry(0.4, 16, 16);
     const head = new THREE.Mesh(headGeo, skinMat);
-    head.position.y = 2.7;
+    head.position.y = 2.9;
     avatarGroup.add(head);
 
-    // Avatar Qulaqları
-    const earGeo = new THREE.ConeGeometry(0.1, 0.4, 4);
+    // Qulaqlar
+    const earGeo = new THREE.ConeGeometry(0.12, 0.4, 4);
     const leftEar = new THREE.Mesh(earGeo, skinMat);
     leftEar.rotation.z = -Math.PI / 3;
-    leftEar.position.set(-0.35, 2.7, 0);
+    leftEar.position.set(-0.4, 2.9, 0);
     avatarGroup.add(leftEar);
 
     const rightEar = new THREE.Mesh(earGeo, skinMat);
     rightEar.rotation.z = Math.PI / 3;
-    rightEar.position.set(0.35, 2.7, 0);
+    rightEar.position.set(0.4, 2.9, 0);
     avatarGroup.add(rightEar);
 
-    // Əllər (Arms)
+    // Qollar
     const armGeo = new THREE.CylinderGeometry(0.12, 0.1, 1.2, 8);
     const leftArm = new THREE.Mesh(armGeo, skinMat);
-    leftArm.position.set(-0.7, 1.8, 0);
-    leftArm.rotation.z = 0.2;
+    leftArm.position.set(-0.7, 2.0, 0);
+    leftArm.rotation.z = 0.3;
     avatarGroup.add(leftArm);
 
     const rightArm = new THREE.Mesh(armGeo, skinMat);
-    rightArm.position.set(0.7, 1.8, 0);
-    rightArm.rotation.z = -0.2;
+    rightArm.position.set(0.7, 2.0, 0);
+    rightArm.rotation.z = -0.3;
     avatarGroup.add(rightArm);
 
-    // Karakter Aurası (Ətrafında Dövran Edən Su Həlqəsi)
-    const waterRingGeo = new THREE.TorusGeometry(1.2, 0.08, 16, 32);
+    // Ayaqlar
+    const legGeo = new THREE.CylinderGeometry(0.15, 0.12, 1.2, 8);
+    const leftLeg = new THREE.Mesh(legGeo, armorMat);
+    leftLeg.position.set(-0.25, 0.6, 0);
+    avatarGroup.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(legGeo, armorMat);
+    rightLeg.position.set(0.25, 0.6, 0);
+    avatarGroup.add(rightLeg);
+
+    // Su Aurası
+    const waterRingGeo = new THREE.TorusGeometry(1.3, 0.08, 16, 32);
     const waterRingMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
     const waterRing = new THREE.Mesh(waterRingGeo, waterRingMat);
     waterRing.rotation.x = Math.PI / 2;
-    waterRing.position.y = 1.2;
+    waterRing.position.y = 1.5;
     avatarGroup.add(waterRing);
 
     scene.add(avatarGroup);
 
-    // 4. WATERBENDING (SU ŞIRNAĞI VƏ PARTİKL SİSTEMİ)
+    // 4. HÜCUM SİSTEMİ
     const waterParticles = [];
     let isAttacking = false;
 
@@ -296,24 +144,24 @@
     window.addEventListener('mouseup', () => isAttacking = false);
 
     function createWaterJet() {
-        const pGeo = new THREE.SphereGeometry(0.25 + Math.random() * 0.2, 8, 8);
+        const pGeo = new THREE.SphereGeometry(0.25 + Math.random() * 0.15, 8, 8);
         const pMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.8 });
         const p = new THREE.Mesh(pGeo, pMat);
 
         p.position.copy(avatarGroup.position);
-        p.position.y = 1.8;
+        p.position.y = 2.0;
 
-        const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(avatarGroup.quaternion);
-        // Su jetinə biraz dağınıqlıq veririk
+        // Karakterin baxdığı tərəfə atəş açmaq
+        const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(avatarGroup.quaternion);
         dir.x += (Math.random() - 0.5) * 0.2;
         dir.y += (Math.random() - 0.5) * 0.1;
 
-        p.userData = { dir: dir, life: 60 };
+        p.userData = { dir: dir, life: 50 };
         scene.add(p);
         waterParticles.push(p);
     }
 
-    // 5. İDARƏETMƏ VƏ ANİMASİYA
+    // 5. ANİMASİYA VƏ İDARƏƏTMƏ
     const keys = {};
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
@@ -321,36 +169,38 @@
     function animate() {
         requestAnimationFrame(animate);
 
-        // Su Aurasının Fırlanması
+        // Su Aurası Fırlanması
         waterRing.rotation.z += 0.05;
-        waterRing.position.y = 1.2 + Math.sin(Date.now() * 0.005) * 0.2;
+        waterRing.position.y = 1.5 + Math.sin(Date.now() * 0.005) * 0.15;
 
-        // Karakter Hərəkəti
-        const speed = 0.2;
-        if (keys['w']) { avatarGroup.position.z -= speed; avatarGroup.rotation.y = Math.PI; }
-        if (keys['s']) { avatarGroup.position.z += speed; avatarGroup.rotation.y = 0; }
-        if (keys['a']) { avatarGroup.position.x -= speed; avatarGroup.rotation.y = -Math.PI / 2; }
-        if (keys['d']) { avatarGroup.position.x += speed; avatarGroup.rotation.y = Math.PI / 2; }
+        // Karakter Hərəkəti Və Dönməsi
+        const speed = 0.15;
+        let moved = false;
 
-        // Məbəd Kənarı
+        if (keys['w']) { avatarGroup.position.z -= speed; avatarGroup.rotation.y = Math.PI; moved = true; }
+        if (keys['s']) { avatarGroup.position.z += speed; avatarGroup.rotation.y = 0; moved = true; }
+        if (keys['a']) { avatarGroup.position.x -= speed; avatarGroup.rotation.y = -Math.PI / 2; moved = true; }
+        if (keys['d']) { avatarGroup.position.x += speed; avatarGroup.rotation.y = Math.PI / 2; moved = true; }
+
+        // Sərhəd Yoxlanışı
         const dist = Math.sqrt(avatarGroup.position.x**2 + avatarGroup.position.z**2);
         if (dist > arenaRadius - 2) {
             avatarGroup.position.x *= (arenaRadius - 2) / dist;
             avatarGroup.position.z *= (arenaRadius - 2) / dist;
         }
 
-        // Su Atəşi (Sıxıb Saxladıqda)
+        // Su Şırnağı Yaradılması
         if (isAttacking) {
             createWaterJet();
             createWaterJet();
         }
 
-        // Su Hissəciklərinin Hərəkəti Və Yox Olması
+        // Hissəciklərin Hərəkəti
         for (let i = waterParticles.length - 1; i >= 0; i--) {
             const p = waterParticles[i];
-            p.position.addScaledVector(p.userData.dir, 0.7);
+            p.position.addScaledVector(p.userData.dir, 0.6);
             p.userData.life--;
-            p.scale.multiplyScalar(0.97); // Kiçilir
+            p.scale.multiplyScalar(0.96);
 
             if (p.userData.life <= 0) {
                 scene.remove(p);
@@ -358,11 +208,11 @@
             }
         }
 
-        // Kamera İzləməsi
+        // KAMERA İZLƏMƏSİ (Daha yaxın və rahat bucaq)
         camera.position.x = avatarGroup.position.x;
-        camera.position.z = avatarGroup.position.z + 14;
-        camera.position.y = avatarGroup.position.y + 10;
-        camera.lookAt(avatarGroup.position.x, avatarGroup.position.y + 1.5, avatarGroup.position.z);
+        camera.position.y = avatarGroup.position.y + 4; // Yüksəklik azaldıldı
+        camera.position.z = avatarGroup.position.z + 8; // Məsafə yaxınlaşdırıldı
+        camera.lookAt(avatarGroup.position.x, avatarGroup.position.y + 1.8, avatarGroup.position.z);
 
         renderer.render(scene, camera);
     }
